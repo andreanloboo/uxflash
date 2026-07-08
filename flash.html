@@ -672,7 +672,7 @@
     validarPublicar();
   });
   function validarPublicar(){
-    btnPublicar.disabled = !(temArquivo && taJust.value.trim().length >= 30);
+    btnPublicar.disabled = !(temArquivo && taJust.value.trim().length > 0);
   }
 
   /* ---------- Aceite (checkbox do preview) ---------- */
