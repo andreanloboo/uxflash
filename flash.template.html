@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>YetzFlash — Gerenciar Plataforma</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&family=Oxanium:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --amarelo:#FCB614;
+    --amarelo-claro:#FDE09E;
+    --cinza-01:#5D5E5E;
+    --cinza-02:#909191;
+    --cinza-03:#C6C6C6;
+    --cinza-05:#F7F7F7;
+    --preto:#000000;
+    --texto:#3A3B3D;
+    --desabilitado:#E1E2E3;
+    --editor-ico:#212529;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    font-family:'Lato',Arial,sans-serif;
+    background:#fff;
+    color:var(--texto);
+    min-width:1500px;
+  }
+  button{font-family:inherit;border:none;background:none;cursor:pointer}
+  .frame{display:flex;flex-direction:column;min-height:100vh}
+  .body{display:flex;flex:1;min-height:0}
+
+  /* ===== Sidebar ===== */
+  .sidebar{width:172px;flex:none;background:var(--amarelo);overflow:hidden}
+  .sidebar img{width:172px;height:auto;display:block}
+
+  /* ===== Área direita ===== */
+  .right{flex:1;display:flex;min-width:0}
+  .preview-side{flex:1;display:flex;flex-direction:column;min-width:0}
+  .topbar{
+    height:142px;flex:none;display:flex;align-items:flex-start;justify-content:flex-end;
+    padding:64px;border-bottom:1px solid #ECECEC;
+  }
+  .topbar .ola{font-size:14px;font-weight:700;color:var(--amarelo);line-height:1}
+
+  /* ===== Coluna do formulário ===== */
+  .form-col{
+    width:462px;flex:none;border-right:1px solid var(--cinza-03);
+    padding:128px 40px;display:flex;flex-direction:column;gap:32px;
+  }
+  .page-title{display:flex;align-items:center;gap:16px}
+  .page-title h1{font-size:20px;font-weight:700;color:var(--amarelo);line-height:1}
+
+  .field{
+    position:relative;height:40px;border:1px solid var(--cinza-01);border-radius:100px;
+    background:#fff;display:flex;align-items:center;padding:0 24px;gap:10px;
+  }
+  .field input{
+    flex:1;border:none;outline:none;font-family:'Lato',Arial,sans-serif;
+    font-size:12px;color:var(--texto);background:transparent;min-width:0;
+  }
+  .field input::placeholder{color:var(--cinza-02)}
+
+  /* Select customizado */
+  .select-wrap{position:relative}
+  .select{cursor:pointer;user-select:none;justify-content:space-between}
+  .select .valor{font-size:12px;color:var(--texto)}
+  .select .chev{transition:transform .18s ease}
+  .select.aberto .chev{transform:rotate(180deg)}
+  .select-menu{
+    position:absolute;top:calc(100% + 6px);left:0;right:0;background:#fff;
+    border:1px solid var(--cinza-03);border-radius:12px;overflow:hidden;z-index:30;
+    box-shadow:0 8px 24px rgba(0,0,0,.08);display:none;
+  }
+  .select-wrap.aberto .select-menu{display:block}
+  .select-menu button{
+    display:block;width:100%;text-align:left;padding:11px 24px;font-size:12px;color:var(--texto);
+  }
+  .select-menu button:hover{background:var(--amarelo-claro)}
+
+  /* Vista: Modo de Manutenção */
+  .datas{display:flex;flex-direction:column;gap:20px}
+  .data-row{display:flex;align-items:center;gap:8px}
+  .data-label{display:flex;align-items:center;gap:8px;width:62px;flex:none}
+  .data-label span{font-size:14px;font-weight:700;color:var(--amarelo)}
+  .data-row .field{flex:1}
+
+  .radios{display:flex;align-items:center;gap:49px}
+  .radio{display:flex;align-items:center;gap:10px;cursor:pointer}
+  .radio .anel{
+    width:20px;height:20px;border-radius:50%;border:1.8px solid var(--cinza-01);
+    display:flex;align-items:center;justify-content:center;flex:none;transition:border-color .15s;
+  }
+  .radio.marcado .anel{border-color:var(--amarelo)}
+  .radio .anel::after{
+    content:"";width:12px;height:12px;border-radius:50%;background:var(--amarelo);
+    transform:scale(0);transition:transform .15s;
+  }
+  .radio.marcado .anel::after{transform:scale(1)}
+  .radio span{font-size:12px;color:var(--cinza-02)}
+
+  #tituloManu input:disabled{color:var(--cinza-02)}
+
+  .editor{border:1px solid var(--cinza-01);border-radius:8px;background:#fff;overflow:hidden}
+  .editor-bar{
+    display:flex;align-items:center;height:40px;border-bottom:1px solid var(--cinza-01);
+    padding:8px 16px;gap:0;
+  }
+  .editor-bar .grupo{display:flex}
+  .editor-bar .sep{width:35px}
+  .editor-bar button{
+    width:24px;height:24px;border-radius:4px;display:flex;align-items:center;justify-content:center;
+    color:var(--editor-ico);
+  }
+  .editor-bar button:hover{background:var(--cinza-05)}
+  .editor-bar button svg{display:block}
+  .editor-body{
+    min-height:106px;padding:10px 16px;font-size:12px;line-height:16.8px;color:var(--cinza-02);
+    outline:none;
+  }
+  .editor-body[contenteditable="true"]{color:var(--texto)}
+
+  .btn-primario{
+    height:40px;border-radius:100px;background:var(--amarelo);width:100%;
+    font-size:16px;font-weight:700;color:var(--preto);transition:filter .15s;
+  }
+  .btn-primario:hover{filter:brightness(1.04)}
+  .btn-primario:disabled{background:var(--desabilitado);color:var(--cinza-02);cursor:default;filter:none}
+
+  /* Vista: Termos e Condições */
+  .versao{display:flex;flex-direction:column;gap:8px}
+  .versao .rotulo{font-size:14px;font-weight:700;color:var(--amarelo)}
+  .versao .num{font-size:14px;font-weight:700;color:var(--cinza-01)}
+  .versao .por{font-size:12px;color:var(--cinza-02)}
+  .versao .links{display:flex;gap:24px;margin-top:6px}
+  .versao .links a{font-size:12px;font-weight:700;color:var(--amarelo);text-decoration:underline}
+
+  .publicar{display:flex;flex-direction:column;gap:20px}
+  .publicar h2{font-size:14px;font-weight:700;color:var(--preto)}
+  .upload{cursor:pointer;justify-content:space-between}
+  .upload .rotulo-arquivo{font-size:12px;color:var(--cinza-02);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .upload.com-arquivo .rotulo-arquivo{color:var(--texto)}
+  .upload .ico{flex:none;display:flex}
+  .upload input[type=file]{display:none}
+
+  .just{display:flex;flex-direction:column;gap:8px}
+  .just label{font-size:14px;font-weight:700;color:var(--preto)}
+  .just textarea{
+    height:120px;border:1px solid var(--cinza-01);border-radius:8px;padding:12px 16px;
+    font-family:'Lato',Arial,sans-serif;font-size:12px;line-height:16.8px;color:var(--texto);
+    resize:none;outline:none;
+  }
+  .just textarea::placeholder{color:var(--cinza-02)}
+  .just .contador{font-size:12px;color:var(--cinza-02);text-align:right}
+  .nota{font-size:11px;line-height:1.2;color:var(--cinza-02)}
+
+  /* ===== Coluna de pré-visualização ===== */
+  .preview-col{flex:1;padding:24px 64px 48px;display:flex;flex-direction:column;gap:40px;min-width:0}
+  .pv-header{
+    height:126px;flex:none;background:var(--amarelo);border-radius:8px;
+    display:flex;align-items:center;justify-content:space-between;padding:0 32px;
+  }
+  .pv-header .pill{display:flex;align-items:center;gap:16px}
+  .pv-header .pill span{font-size:20px;font-weight:700;color:var(--preto)}
+
+  .pv-row{display:flex;justify-content:center;gap:98px}
+  .pv-col{display:flex;flex-direction:column;align-items:center}
+  .chip{
+    background:var(--amarelo-claro);border-radius:32px;padding:12px 24px;
+    font-size:12px;font-weight:700;color:var(--preto);line-height:1;
+  }
+
+  /* Manutenção — desktop */
+  .pv-col.desk-manu{gap:45px}
+  .painel-desk-manu{
+    width:669px;height:447px;background:var(--amarelo);border-radius:24px;
+    display:flex;align-items:center;justify-content:center;gap:12px;padding:0 40px;
+  }
+  .painel-desk-manu img.fone{width:211px;height:319px;flex:none}
+  .aviso-stack{width:190px;display:flex;flex-direction:column;gap:16px}
+  .aviso-stack img.logo{width:119px;height:48px;align-self:flex-start}
+  .aviso-titulo{font-size:20px;font-weight:700;color:#fff;line-height:1.4}
+  .aviso-corpo{font-size:12px;line-height:1.35;color:var(--preto)}
+  .cartao-retorno{
+    background:#fff;border-radius:8px;padding:8px 10px;display:flex;align-items:center;gap:8px;
+  }
+  .cartao-retorno .txt{display:flex;flex-direction:column;gap:1px}
+  .cartao-retorno .l1{font-family:'Oxanium',monospace;font-weight:700;font-size:12px;color:var(--preto);line-height:1.1;text-transform:uppercase}
+  .cartao-retorno .l2{font-family:'Oxanium',monospace;font-size:12px;color:var(--cinza-01);line-height:1.1}
+
+  /* Manutenção — mobile */
+  .pv-col.mob-manu{gap:25px}
+  .painel-mob-manu{
+    width:245px;height:532px;background:var(--amarelo);border-radius:30px;
+    display:flex;align-items:center;justify-content:center;padding:24px;
+  }
+  .painel-mob-manu .stack{width:197px;display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center}
+  .painel-mob-manu img.logo{width:73px;height:30px}
+  .painel-mob-manu img.fone{width:132px;height:200px}
+  .painel-mob-manu .aviso-titulo{line-height:1.4}
+  .painel-mob-manu .cartao-retorno{align-self:center;text-align:left}
+
+  /* Termos — desktop */
+  #pvTermos{gap:60px}
+  .pv-col.desk-tc{gap:20px}
+  .painel-desk-tc{
+    width:853px;height:532px;background:var(--amarelo);border-radius:24px;position:relative;
+    display:flex;flex-direction:column;align-items:center;
+  }
+  .painel-desk-tc img.logo{width:122px;height:50px;margin-top:26px}
+  .modal-tc{
+    width:348px;height:406px;background:#fff;border-radius:7px;margin-top:24px;
+    padding:20px;display:flex;flex-direction:column;box-shadow:0 10px 30px rgba(0,0,0,.10);
+  }
+  .modal-tc .doc{align-self:center}
+  .modal-tc h3{font-size:14px;font-weight:700;color:var(--preto);text-align:center;margin-top:15px;line-height:1.2}
+  .modal-tc .sub{font-size:9px;color:#4B4B4B;text-align:center;margin-top:5px;line-height:1.35}
+  .caixa-termos{
+    margin-top:15px;height:163px;background:#F5F5F5;border:1px solid #E1E1E1;border-radius:7px;
+    padding:12px 4px 12px 12px;overflow:hidden;
+  }
+  .caixa-termos .rolagem{height:100%;overflow-y:auto;padding-right:8px}
+  .caixa-termos .rolagem::-webkit-scrollbar{width:5px}
+  .caixa-termos .rolagem::-webkit-scrollbar-thumb{background:#E3E3E3;border-radius:26px}
+  .caixa-termos h4{font-size:8px;font-weight:700;color:#212529;margin-bottom:2px}
+  .caixa-termos p{font-size:8px;color:#4B4B4B;line-height:1.45;margin-bottom:8px}
+  .caixa-termos ul{margin:0 0 8px 12px}
+  .caixa-termos li{font-size:8px;color:#4B4B4B;line-height:1.5}
+  .aceite{display:flex;align-items:center;gap:6px;margin-top:12px;cursor:pointer}
+  .aceite .cx{
+    width:10px;height:10px;border:1px solid var(--cinza-01);border-radius:2px;background:#fff;flex:none;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .aceite.ok .cx{background:var(--amarelo);border-color:var(--amarelo)}
+  .aceite .cx svg{display:none}
+  .aceite.ok .cx svg{display:block}
+  .aceite span{font-size:9px;color:#292E33}
+  .modal-tc .botoes{margin-top:auto;display:flex;flex-direction:column;gap:4px}
+  .btn-aceitar{
+    height:30px;border-radius:126px;background:var(--amarelo);font-size:10px;font-weight:700;color:var(--preto);
+  }
+  .btn-sair{height:26px;font-size:10px;font-weight:700;color:var(--preto)}
+
+  /* Termos — mobile (bottom sheet) */
+  .pv-col.mob-tc{gap:20px}
+  .fone-tc{
+    width:245px;height:532px;border-radius:24px;overflow:hidden;position:relative;background:var(--amarelo);
+  }
+  .fone-tc .scrim{position:absolute;inset:0;background:rgba(0,0,0,.5)}
+  .sheet{
+    position:absolute;left:0;right:0;bottom:0;height:437px;background:#fff;
+    border-radius:16px 16px 0 0;padding:8px 14px 14px;display:flex;flex-direction:column;
+  }
+  .sheet .alca{width:32px;height:4px;border-radius:2px;background:var(--cinza-03);align-self:center}
+  .sheet .doc{align-self:center;margin-top:12px}
+  .sheet h3{font-size:11px;font-weight:700;color:var(--preto);text-align:center;margin-top:10px}
+  .sheet .sub{font-size:7.5px;color:#4B4B4B;text-align:center;margin-top:4px;line-height:1.35}
+  .sheet .caixa-termos{margin-top:10px;height:150px;padding:10px 3px 10px 10px}
+  .sheet .caixa-termos h4,.sheet .caixa-termos p,.sheet .caixa-termos li{font-size:7px}
+  .sheet .aceite{margin-top:10px}
+  .sheet .aceite .cx{width:9px;height:9px}
+  .sheet .aceite span{font-size:7.5px}
+  .sheet .botoes{margin-top:auto;display:flex;flex-direction:column;gap:3px}
+  .sheet .btn-aceitar{height:26px;font-size:8.5px}
+  .sheet .btn-sair{height:22px;font-size:8.5px}
+
+  /* ===== Rodapé ===== */
+  footer{
+    height:81px;flex:none;display:flex;align-items:center;justify-content:center;gap:32px;background:#fff;
+  }
+  footer .txt{font-size:14px;color:#1D1D1D}
+  footer .divisor{width:1px;height:44px;background:var(--cinza-03)}
+  footer img{width:115px;height:34px;display:block}
+
+  /* ===== Modal de sucesso ===== */
+  .overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;
+    z-index:100;opacity:0;pointer-events:none;transition:opacity .18s ease;
+  }
+  .overlay.visivel{opacity:1;pointer-events:auto}
+  .modal-sucesso{
+    width:371px;background:#fff;border-radius:16px;padding:32px 32px 24px;
+    display:flex;flex-direction:column;align-items:center;gap:24px;
+    transform:translateY(8px) scale(.98);transition:transform .18s ease;
+    box-shadow:0 24px 60px rgba(0,0,0,.18);
+  }
+  .overlay.visivel .modal-sucesso{transform:none}
+  .modal-sucesso h3{font-size:20px;font-weight:700;color:var(--preto);text-align:center;line-height:1.35}
+  .modal-sucesso .btn-primario{margin-top:4px}
+
+  [hidden]{display:none !important}
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="body">
+    <aside class="sidebar"><img src="%%SIDEBAR%%" alt="Menu lateral YetzFlash"></aside>
+    <div class="right">
+
+        <!-- ============ Coluna do formulário ============ -->
+        <section class="form-col">
+          <div class="page-title">
+            <svg width="19" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 12.9a2.9 2.9 0 1 0 0-5.8 2.9 2.9 0 0 0 0 5.8Z" fill="#FCB614"/><path d="M16.6 12.4c.14-.44.6-.72 1.05-.62l.1.02a1.63 1.63 0 0 0 .38-3.22l-.1-.02c-.46-.05-.83-.44-.84-.9-.02-.63-.12-1.24-.3-1.82-.13-.44.07-.92.48-1.13l.09-.05A1.63 1.63 0 0 0 15.9 1.9l-.08.05c-.4.23-.92.14-1.22-.21a7.6 7.6 0 0 0-1.4-1.19c-.38-.26-.5-.77-.28-1.18" stroke="none" fill="none"/><path fill-rule="evenodd" clip-rule="evenodd" d="M8.03.85C8.3.32 8.85 0 9.44 0h1.12c.6 0 1.14.33 1.41.85l.5.94c.6.19 1.18.44 1.71.76l1.04-.3c.57-.16 1.18.03 1.55.5l.7.86c.37.46.44 1.1.17 1.63l-.48.96c.28.55.5 1.14.63 1.75l.95.5c.53.28.85.83.85 1.42v1.1c0 .6-.32 1.14-.85 1.42l-.95.5a7.5 7.5 0 0 1-.63 1.76l.48.95c.27.53.2 1.17-.17 1.63l-.7.87c-.37.46-.98.65-1.55.49l-1.04-.3c-.53.32-1.1.57-1.7.76l-.51.94c-.27.53-.82.86-1.41.86H9.44c-.6 0-1.14-.33-1.41-.86l-.5-.94a7.53 7.53 0 0 1-1.71-.75l-1.04.3c-.57.16-1.18-.04-1.55-.5l-.7-.87a1.58 1.58 0 0 1-.17-1.63l.48-.95a7.5 7.5 0 0 1-.63-1.75l-.96-.5A1.59 1.59 0 0 1 .4 11.5v-1.1c0-.6.33-1.15.85-1.43l.96-.5c.14-.6.35-1.2.63-1.74l-.48-.96c-.27-.53-.2-1.17.17-1.63l.7-.87c.37-.46.98-.65 1.55-.49l1.04.3a7.53 7.53 0 0 1 1.7-.76l.51-.94ZM10 14.5a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Z" fill="#FCB614"/></svg>
+            <h1>Gerenciar Plataforma</h1>
+          </div>
+
+          <div class="select-wrap" id="selWrap">
+            <div class="field select" id="sel" role="button" tabindex="0" aria-haspopup="listbox">
+              <span class="valor" id="selValor">Modo de Manutenção</span>
+              <svg class="chev" width="14" height="8" viewBox="0 0 14 8" fill="none"><path d="M1 1l6 6 6-6" stroke="#5D5E5E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="select-menu" role="listbox">
+              <button data-op="manutencao">Modo de Manutenção</button>
+              <button data-op="termos">Termos e Condições</button>
+            </div>
+          </div>
+
+          <!-- ===== Vista Modo de Manutenção ===== -->
+          <div id="vistaManu" style="display:flex;flex-direction:column;gap:32px">
+            <div class="datas">
+              <div class="data-row">
+                <div class="data-label">
+                  <svg width="19" height="19" viewBox="0 0 19 19" fill="none"><rect x="2.5" y="3.5" width="14" height="13" rx="2" stroke="#FCB614" stroke-width="1.5"/><path d="M6.3 2v3M12.7 2v3M2.5 7.5h14" stroke="#FCB614" stroke-width="1.5" stroke-linecap="round"/></svg>
+                  <span>Início</span>
+                </div>
+                <div class="field"><input id="dtInicio" type="text" placeholder="Data de início Ex: 10/02/2025 10:30"></div>
+              </div>
+              <div class="data-row">
+                <div class="data-label">
+                  <svg width="19" height="19" viewBox="0 0 19 19" fill="none"><rect x="2.5" y="3.5" width="14" height="13" rx="2" stroke="#FCB614" stroke-width="1.5"/><path d="M6.3 2v3M12.7 2v3M2.5 7.5h14" stroke="#FCB614" stroke-width="1.5" stroke-linecap="round"/></svg>
+                  <span>Fim</span>
+                </div>
+                <div class="field"><input id="dtFim" type="text" placeholder="Data do fim Ex: 10/02/2025 10:30"></div>
+              </div>
+            </div>
+
+            <div class="radios">
+              <div class="radio marcado" id="rdPadrao"><span class="anel"></span><span>Texto Padrão</span></div>
+              <div class="radio" id="rdPerso"><span class="anel"></span><span>Texto Personalizado</span></div>
+            </div>
+
+            <div class="field" id="tituloManu"><input id="inTitulo" type="text" value="FIQUE ATENTO!" disabled></div>
+
+            <div class="editor">
+              <div class="editor-bar">
+                <div class="grupo">
+                  <button data-cmd="bold" title="Negrito"><svg width="20" height="20" viewBox="0 0 20 20"><path d="M6 4h4.2a3 3 0 0 1 1.8 5.4A3.2 3.2 0 0 1 10.6 15H6V4Zm2.2 4.5h1.9a1.15 1.15 0 1 0 0-2.3H8.2v2.3Zm0 4.3h2.3a1.2 1.2 0 1 0 0-2.4H8.2v2.4Z" fill="#212529"/></svg></button>
+                  <button data-cmd="italic" title="Itálico"><svg width="20" height="20" viewBox="0 0 20 20"><path d="M8.5 4H14v1.8h-1.9l-2.3 8.4H12V16H6.5v-1.8h1.9l2.3-8.4H8.5V4Z" fill="#212529"/></svg></button>
+                  <button data-cmd="underline" title="Sublinhado"><svg width="20" height="20" viewBox="0 0 20 20"><path d="M6 3.5h1.8v6a2.2 2.2 0 1 0 4.4 0v-6H14v6a4 4 0 1 1-8 0v-6ZM5 15.5h10V17H5v-1.5Z" fill="#212529"/></svg></button>
+                  <button data-cmd="strikeThrough" title="Tachado"><svg width="20" height="20" viewBox="0 0 20 20"><path d="M3.5 9.3h13v1.4h-13V9.3Z" fill="#212529"/><path d="M10.1 4c1.9 0 3.4.8 3.9 2.3l-1.7.5c-.3-.8-1.1-1.3-2.2-1.3-1.2 0-2 .5-2 1.3 0 .5.3.8 1 1.1H6.6c-.3-.4-.4-.8-.4-1.3C6.2 5 7.8 4 10.1 4ZM13.9 12c0 2-1.7 3.2-4 3.2-2.1 0-3.7-.9-4.2-2.5l1.7-.5c.4.9 1.3 1.5 2.6 1.5 1.3 0 2.1-.5 2.1-1.5 0-.2 0-.4-.1-.6h1.8c0 .1.1.3.1.4Z" fill="#212529"/></svg></button>
+                </div>
+                <div class="sep"></div>
+                <div class="grupo">
+                  <button data-cmd="insertUnorderedList" title="Lista"><svg width="20" height="20" viewBox="0 0 20 20"><circle cx="4.5" cy="5.5" r="1.2" fill="#212529"/><circle cx="4.5" cy="10" r="1.2" fill="#212529"/><circle cx="4.5" cy="14.5" r="1.2" fill="#212529"/><path d="M8 4.8h9v1.4H8V4.8Zm0 4.5h9v1.4H8V9.3Zm0 4.5h9v1.4H8v-1.4Z" fill="#212529"/></svg></button>
+                  <button data-cmd="insertOrderedList" title="Lista numerada"><svg width="20" height="20" viewBox="0 0 20 20"><path d="M4.1 3.5h1.2v3.4H4.1V4.7h-.8v-1l.8-.2ZM3.3 9h2.5v1H4.4l-.1.6h.4c.7 0 1.2.4 1.2 1.1 0 .8-.6 1.3-1.5 1.3-.5 0-1-.1-1.3-.4l.4-.8c.2.2.5.3.8.3.3 0 .5-.1.5-.4 0-.2-.2-.3-.6-.3h-1l.1-2.4ZM8 4.8h9v1.4H8V4.8Zm0 4.5h9v1.4H8V9.3Zm0 4.5h9v1.4H8v-1.4Z" fill="#212529"/></svg></button>
+                </div>
+                <div class="sep"></div>
+                <button data-cmd="createLink" title="Link"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M8.2 11.8a3.3 3.3 0 0 0 4.7 0l2.4-2.4A3.32 3.32 0 0 0 10.6 4.7l-1.2 1.2" stroke="#212529" stroke-width="1.5" stroke-linecap="round"/><path d="M11.8 8.2a3.3 3.3 0 0 0-4.7 0l-2.4 2.4a3.32 3.32 0 0 0 4.7 4.7l1.2-1.2" stroke="#212529" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+              </div>
+              <div class="editor-body" id="edBody" contenteditable="false">A Plataforma YETZPAY está passando por uma ATUALIZAÇÃO<br>para oferecer ainda mais recursos.</div>
+            </div>
+
+            <button class="btn-primario" id="btnSalvar">Salvar</button>
+          </div>
+
+          <!-- ===== Vista Termos e Condições ===== -->
+          <div id="vistaTermos" hidden style="display:flex;flex-direction:column;gap:32px">
+            <div class="versao">
+              <span class="rotulo">Versão vigente</span>
+              <span class="num" id="vNum">v2.3 — publicada em 15/05/2026</span>
+              <span class="por" id="vPor">por Tauana Mendes&nbsp;&nbsp;·&nbsp;&nbsp;Justificativa: adequação à LGPD</span>
+              <div class="links">
+                <a href="#" onclick="return false">Baixar documento (PDF)</a>
+                <a href="#" onclick="return false">Ver histórico de versões</a>
+              </div>
+            </div>
+
+            <div class="publicar">
+              <h2>Publicar nova versão</h2>
+              <label class="field upload" id="upField">
+                <span class="rotulo-arquivo" id="upRotulo">Selecionar arquivo (PDF ou DOCX — máx. 5MB)</span>
+                <span class="ico" id="upIcone">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 10V2.5M8 2.5 5.2 5.3M8 2.5l2.8 2.8" stroke="#5D5E5E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.5 10.5v2a1.5 1.5 0 0 0 1.5 1.5h8a1.5 1.5 0 0 0 1.5-1.5v-2" stroke="#5D5E5E" stroke-width="1.6" stroke-linecap="round"/></svg>
+                </span>
+                <input type="file" id="upInput" accept=".pdf,.docx">
+              </label>
+
+              <div class="just">
+                <label for="taJust">Justificativa *</label>
+                <textarea id="taJust" placeholder="Descreva o motivo da atualização dos termos (mínimo de 30 caracteres)..."></textarea>
+                <span class="contador" id="contador">0/30</span>
+              </div>
+
+              <p class="nota">Ao publicar uma nova versão, todos os usuários deverão aceitar novamente os<br>termos no próximo acesso.</p>
+            </div>
+
+            <button class="btn-primario" id="btnPublicar" disabled>Publicar nova versão</button>
+          </div>
+        </section>
+
+        <!-- ============ Lado da pré-visualização ============ -->
+        <div class="preview-side">
+        <header class="topbar"><span class="ola">Olá, Tauana</span></header>
+        <section class="preview-col">
+          <div class="pv-header">
+            <div class="pill">
+              <svg width="24" height="19" viewBox="0 0 24 19" fill="none"><path d="M1 9.5S5 1.5 12 1.5 23 9.5 23 9.5s-4 8-11 8-11-8-11-8Z" stroke="#000" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="9.5" r="4" stroke="#000" stroke-width="2"/></svg>
+              <span>Pré-Visualização</span>
+            </div>
+            <svg width="45" height="35" viewBox="0 0 45 35" fill="none"><path d="M3 17.5S9.5 3 22.5 3 42 17.5 42 17.5 35.5 32 22.5 32 3 17.5 3 17.5Z" stroke="#FDE09E" stroke-width="6" stroke-linejoin="round"/><circle cx="22.5" cy="17.5" r="7.5" stroke="#FDE09E" stroke-width="6"/></svg>
+          </div>
+
+          <!-- ===== Preview: Modo de Manutenção ===== -->
+          <div class="pv-row" id="pvManu">
+            <div class="pv-col desk-manu">
+              <span class="chip">Desktop</span>
+              <div class="painel-desk-manu">
+                <img class="fone" src="%%PHONEDESK%%" alt="">
+                <div class="aviso-stack">
+                  <img class="logo" src="%%FLASHLOGO%%" alt="YetzFlash">
+                  <div class="aviso-titulo" data-bind="titulo">FIQUE ATENTO!</div>
+                  <div class="aviso-corpo" data-bind="corpo">A Plataforma <b>YETZFLASH</b> está<br>passando por uma <b>ATUALIZAÇÃO</b><br>para oferecer ainda mais recursos.</div>
+                  <div class="cartao-retorno">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7.2" stroke="#000" stroke-width="1.6"/><path d="M9 5v4.2l2.6 1.6" stroke="#000" stroke-width="1.6" stroke-linecap="round"/></svg>
+                    <div class="txt">
+                      <span class="l1">Previsão de retorno:</span>
+                      <span class="l2" data-bind="retorno">20/03/2025 - 12:00</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="pv-col mob-manu">
+              <span class="chip">Mobile</span>
+              <div class="painel-mob-manu">
+                <div class="stack">
+                  <img class="logo" src="%%FLASHLOGO%%" alt="YetzFlash">
+                  <img class="fone" src="%%PHONEMOB%%" alt="">
+                  <div class="aviso-titulo" data-bind="titulo">FIQUE ATENTO!</div>
+                  <div class="aviso-corpo" data-bind="corpo">A Plataforma <b>YETZFLASH</b> está<br>passando por uma <b>ATUALIZAÇÃO</b><br>para oferecer ainda mais recursos.</div>
+                  <div class="cartao-retorno">
+                    <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7.2" stroke="#000" stroke-width="1.6"/><path d="M9 5v4.2l2.6 1.6" stroke="#000" stroke-width="1.6" stroke-linecap="round"/></svg>
+                    <div class="txt">
+                      <span class="l1">Previsão de retorno:</span>
+                      <span class="l2" data-bind="retorno">20/03/2025 - 12:00</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ===== Preview: Termos e Condições ===== -->
+          <div class="pv-row" id="pvTermos" hidden>
+            <div class="pv-col desk-tc">
+              <span class="chip">Desktop</span>
+              <div class="painel-desk-tc">
+                <img class="logo" src="%%FLASHLOGO%%" alt="YetzFlash">
+                <div class="modal-tc">
+                  <svg class="doc" width="25" height="25" viewBox="0 0 25 25" fill="none"><path d="M6 2.5h8.5L20 8v13a1.5 1.5 0 0 1-1.5 1.5h-12A1.5 1.5 0 0 1 5 21V4a1.5 1.5 0 0 1 1-1.42.9.9 0 0 1 0-.08Z" stroke="#FCB614" stroke-width="1.8" stroke-linejoin="round"/><path d="M14.5 2.5V8H20" stroke="#FCB614" stroke-width="1.8" stroke-linejoin="round"/></svg>
+                  <h3>Termos e Condições atualizados</h3>
+                  <p class="sub">Revisamos nossos Termos e Condições. Para continuar usando o YetzFlash,<br>leia e aceite a nova versão (v2.4).</p>
+                  <div class="caixa-termos">
+                    <div class="rolagem">
+                      <h4>1. Aceitação dos Termos</h4>
+                      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+                      <h4>2. Licença de Uso</h4>
+                      <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo:</p>
+                      <ul>
+                        <li><b>Amet sit:</b> Nemo enim ipsam voluptatem quia voluptas sit aspernatur.</li>
+                        <li><b>Neque porro:</b> Quisquam est, qui dolorem ipsum quia dolor sit amet.</li>
+                        <li><b>Consectetur:</b> Adipisci velit, sed quia non numquam eius modi tempora.</li>
+                      </ul>
+                      <h4>3. Cadastro e Segurança</h4>
+                      <p>Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus.</p>
+                      <h4>4. Privacidade e Proteção de Dados</h4>
+                      <p>Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae sint et molestiae non recusandae. Itaque earum rerum hic tenetur a sapiente delectus.</p>
+                    </div>
+                  </div>
+                  <div class="aceite" data-aceite>
+                    <span class="cx"><svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M1.5 5.2 4 7.5l4.5-5" stroke="#000" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                    <span>Li e concordo com os Termos e Condições atualizados.</span>
+                  </div>
+                  <div class="botoes">
+                    <button class="btn-aceitar">Aceitar e continuar</button>
+                    <button class="btn-sair">Sair</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="pv-col mob-tc">
+              <span class="chip">Mobile</span>
+              <div class="fone-tc">
+                <div class="scrim"></div>
+                <div class="sheet">
+                  <span class="alca"></span>
+                  <svg class="doc" width="20" height="20" viewBox="0 0 25 25" fill="none"><path d="M6 2.5h8.5L20 8v13a1.5 1.5 0 0 1-1.5 1.5h-12A1.5 1.5 0 0 1 5 21V4a1.5 1.5 0 0 1 1-1.42.9.9 0 0 1 0-.08Z" stroke="#FCB614" stroke-width="1.8" stroke-linejoin="round"/><path d="M14.5 2.5V8H20" stroke="#FCB614" stroke-width="1.8" stroke-linejoin="round"/></svg>
+                  <h3>Termos e Condições atualizados</h3>
+                  <p class="sub">Revisamos nossos Termos e Condições. Para<br>continuar usando o YetzFlash,<br>leia e aceite a nova versão (v2.4).</p>
+                  <div class="caixa-termos">
+                    <div class="rolagem">
+                      <h4>1. Aceitação dos Termos</h4>
+                      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+                      <h4>2. Licença de Uso</h4>
+                      <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>
+                      <h4>3. Cadastro e Segurança</h4>
+                      <p>Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur.</p>
+                    </div>
+                  </div>
+                  <div class="aceite" data-aceite>
+                    <span class="cx"><svg width="7" height="7" viewBox="0 0 10 10" fill="none"><path d="M1.5 5.2 4 7.5l4.5-5" stroke="#000" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                    <span>Li e concordo com os Termos e Condições<br>atualizados.</span>
+                  </div>
+                  <div class="botoes">
+                    <button class="btn-aceitar">Aceitar e continuar</button>
+                    <button class="btn-sair">Sair</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        </div>
+
+    </div>
+  </div>
+
+  <footer>
+    <span class="txt">YETZ LTDA | CNPJ: 28.325.166/0001-05 | 2024 | Todos os direitos reservados</span>
+    <span class="divisor"></span>
+    <img src="%%YETZ%%" alt="yetz">
+  </footer>
+</div>
+
+<!-- ===== Modal de confirmação ===== -->
+<div class="overlay" id="overlay">
+  <div class="modal-sucesso" role="dialog" aria-modal="true">
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M42 24a18 18 0 1 1-9.6-15.9" stroke="#4CAF50" stroke-width="4" stroke-linecap="round"/><path d="M16.5 23.5 23 30l14.5-16" stroke="#4CAF50" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <h3>Configurações<br>salvas com sucesso</h3>
+    <button class="btn-primario" id="btnOk">Ok</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var $ = function(s, c){ return (c||document).querySelector(s); };
+  var $$ = function(s, c){ return Array.prototype.slice.call((c||document).querySelectorAll(s)); };
+
+  /* ---------- Select de tipo de configuração ---------- */
+  var selWrap = $('#selWrap'), sel = $('#sel'), selValor = $('#selValor');
+  var vistaManu = $('#vistaManu'), vistaTermos = $('#vistaTermos');
+  var pvManu = $('#pvManu'), pvTermos = $('#pvTermos');
+
+  sel.addEventListener('click', function(){
+    selWrap.classList.toggle('aberto');
+    sel.classList.toggle('aberto');
+  });
+  document.addEventListener('click', function(e){
+    if(!selWrap.contains(e.target)){ selWrap.classList.remove('aberto'); sel.classList.remove('aberto'); }
+  });
+  $$('.select-menu button').forEach(function(b){
+    b.addEventListener('click', function(){
+      selValor.textContent = b.textContent;
+      var termos = b.dataset.op === 'termos';
+      vistaManu.hidden = termos;  vistaManu.style.display = termos ? 'none' : 'flex';
+      vistaTermos.hidden = !termos; vistaTermos.style.display = termos ? 'flex' : 'none';
+      pvManu.hidden = termos;
+      pvTermos.hidden = !termos;
+      selWrap.classList.remove('aberto'); sel.classList.remove('aberto');
+    });
+  });
+
+  /* ---------- Modo de Manutenção ---------- */
+  var rdPadrao = $('#rdPadrao'), rdPerso = $('#rdPerso');
+  var inTitulo = $('#inTitulo'), edBody = $('#edBody');
+  var TITULO_PADRAO = 'FIQUE ATENTO!';
+  var CORPO_PADRAO_FORM = 'A Plataforma YETZPAY está passando por uma ATUALIZAÇÃO<br>para oferecer ainda mais recursos.';
+  var CORPO_PADRAO_PV = 'A Plataforma <b>YETZFLASH</b> está<br>passando por uma <b>ATUALIZAÇÃO</b><br>para oferecer ainda mais recursos.';
+
+  function bind(nome, html, texto){
+    $$('[data-bind="'+nome+'"]').forEach(function(el){
+      if(html !== null && html !== undefined){ el.innerHTML = html; } else { el.textContent = texto; }
+    });
+  }
+  function atualizarPreviewManu(){
+    var perso = rdPerso.classList.contains('marcado');
+    bind('titulo', null, (perso ? (inTitulo.value || TITULO_PADRAO) : TITULO_PADRAO));
+    bind('corpo', perso ? (edBody.innerHTML || CORPO_PADRAO_PV) : CORPO_PADRAO_PV);
+  }
+  function setRadio(perso){
+    rdPadrao.classList.toggle('marcado', !perso);
+    rdPerso.classList.toggle('marcado', perso);
+    inTitulo.disabled = !perso;
+    edBody.setAttribute('contenteditable', perso ? 'true' : 'false');
+    if(!perso){
+      inTitulo.value = TITULO_PADRAO;
+      edBody.innerHTML = CORPO_PADRAO_FORM;
+    }
+    atualizarPreviewManu();
+  }
+  rdPadrao.addEventListener('click', function(){ setRadio(false); });
+  rdPerso.addEventListener('click', function(){ setRadio(true); });
+  inTitulo.addEventListener('input', atualizarPreviewManu);
+  edBody.addEventListener('input', atualizarPreviewManu);
+
+  $$('.editor-bar button').forEach(function(b){
+    b.addEventListener('mousedown', function(e){ e.preventDefault(); });
+    b.addEventListener('click', function(){
+      if(edBody.getAttribute('contenteditable') !== 'true') return;
+      var cmd = b.dataset.cmd;
+      if(cmd === 'createLink'){
+        document.execCommand(cmd, false, 'https://');
+      } else {
+        document.execCommand(cmd, false, null);
+      }
+      edBody.focus();
+      atualizarPreviewManu();
+    });
+  });
+
+  var dtFim = $('#dtFim');
+  dtFim.addEventListener('input', function(){
+    var v = dtFim.value.trim();
+    var m = v.match(/^(\d{2}\/\d{2}\/\d{4})[ T]+(\d{2}:\d{2})$/);
+    bind('retorno', null, v ? (m ? m[1]+' - '+m[2] : v) : '20/03/2025 - 12:00');
+  });
+
+  /* ---------- Termos e Condições ---------- */
+  var upField = $('#upField'), upInput = $('#upInput'), upRotulo = $('#upRotulo'), upIcone = $('#upIcone');
+  var taJust = $('#taJust'), contador = $('#contador'), btnPublicar = $('#btnPublicar');
+  var UP_PLACEHOLDER = 'Selecionar arquivo (PDF ou DOCX — máx. 5MB)';
+  var UP_ICONE_UPLOAD = upIcone.innerHTML;
+  var UP_ICONE_X = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 2.5l9 9M11.5 2.5l-9 9" stroke="#5D5E5E" stroke-width="1.6" stroke-linecap="round"/></svg>';
+  var temArquivo = false;
+
+  function fmtTamanho(bytes){
+    if(bytes >= 1048576) return (bytes/1048576).toFixed(1).replace('.', ',') + ' MB';
+    return Math.max(1, Math.round(bytes/1024)) + ' KB';
+  }
+  function setArquivo(nome, bytes){
+    temArquivo = !!nome;
+    upField.classList.toggle('com-arquivo', temArquivo);
+    if(temArquivo){
+      upRotulo.innerHTML = nome + '&nbsp;&nbsp;·&nbsp;&nbsp;' + fmtTamanho(bytes);
+      upIcone.innerHTML = UP_ICONE_X;
+    } else {
+      upRotulo.textContent = UP_PLACEHOLDER;
+      upIcone.innerHTML = UP_ICONE_UPLOAD;
+      upInput.value = '';
+    }
+    validarPublicar();
+  }
+  upIcone.addEventListener('click', function(e){
+    if(temArquivo){ e.preventDefault(); e.stopPropagation(); setArquivo(null); }
+  });
+  upInput.addEventListener('change', function(){
+    var f = upInput.files[0];
+    if(!f) return;
+    if(f.size > 5*1048576){
+      upInput.value = '';
+      upRotulo.textContent = 'Arquivo excede o limite de 5MB — selecione outro.';
+      setTimeout(function(){ if(!temArquivo) upRotulo.textContent = UP_PLACEHOLDER; }, 2500);
+      return;
+    }
+    setArquivo(f.name, f.size);
+  });
+
+  taJust.addEventListener('input', function(){
+    contador.textContent = taJust.value.length + '/30';
+    validarPublicar();
+  });
+  function validarPublicar(){
+    btnPublicar.disabled = !(temArquivo && taJust.value.trim().length >= 30);
+  }
+
+  /* ---------- Aceite (checkbox do preview) ---------- */
+  $$('[data-aceite]').forEach(function(el){
+    el.addEventListener('click', function(){ el.classList.toggle('ok'); });
+  });
+
+  /* ---------- Modal de sucesso ---------- */
+  var overlay = $('#overlay'), btnOk = $('#btnOk');
+  var origem = null;
+  function abrirModal(qual){ origem = qual; overlay.classList.add('visivel'); }
+  btnOk.addEventListener('click', function(){
+    overlay.classList.remove('visivel');
+    if(origem === 'termos'){
+      var hoje = new Date();
+      var dd = String(hoje.getDate()).padStart(2,'0');
+      var mm = String(hoje.getMonth()+1).padStart(2,'0');
+      $('#vNum').textContent = 'v2.4 — publicada em ' + dd + '/' + mm + '/' + hoje.getFullYear();
+      var j = taJust.value.trim();
+      $('#vPor').innerHTML = 'por Tauana Mendes&nbsp;&nbsp;·&nbsp;&nbsp;Justificativa: ' + (j.length > 60 ? j.slice(0,60) + '…' : j);
+      setArquivo(null);
+      taJust.value = '';
+      contador.textContent = '0/30';
+      validarPublicar();
+    }
+    origem = null;
+  });
+  overlay.addEventListener('click', function(e){ if(e.target === overlay) btnOk.click(); });
+
+  $('#btnSalvar').addEventListener('click', function(){ abrirModal('manutencao'); });
+  btnPublicar.addEventListener('click', function(){ abrirModal('termos'); });
+})();
+</script>
+</body>
+</html>
