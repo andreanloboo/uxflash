@@ -63,22 +63,34 @@
   }
   .field input::placeholder{color:var(--cinza-02)}
 
-  /* Select customizado */
-  .select-wrap{position:relative}
-  .select{cursor:pointer;user-select:none;justify-content:space-between}
-  .select .valor{font-size:12px;color:var(--texto)}
-  .select .chev{transition:transform .18s ease}
-  .select.aberto .chev{transform:rotate(180deg)}
-  .select-menu{
-    position:absolute;top:calc(100% + 6px);left:0;right:0;background:#fff;
-    border:1px solid var(--cinza-03);border-radius:12px;overflow:hidden;z-index:30;
-    box-shadow:0 8px 24px rgba(0,0,0,.08);display:none;
+  /* Abas de tipo de configuração */
+  .tabs{display:flex;border-bottom:1px solid #CACACA}
+  .tab{
+    display:flex;align-items:center;gap:8px;padding:16px 12px;font-size:16px;color:#4B4B4B;
+    border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s,border-color .15s;
   }
-  .select-wrap.aberto .select-menu{display:block}
-  .select-menu button{
-    display:block;width:100%;text-align:left;padding:11px 24px;font-size:12px;color:var(--texto);
+  .tab svg{display:block;color:#000}
+  .tab:hover{color:var(--texto)}
+  .tab.ativa{color:var(--amarelo);border-bottom-color:var(--amarelo)}
+  .tab.ativa svg{color:var(--amarelo)}
+
+  /* Toggle Ativar/Desativar manutenção */
+  .toggle-manu{display:flex;align-items:center;gap:16px;cursor:pointer;user-select:none}
+  .toggle-manu>span:last-child{font-size:16px;color:var(--texto)}
+  .switch{
+    width:56px;height:30px;border-radius:100px;background:var(--cinza-03);padding:4px;flex:none;
+    display:flex;align-items:center;transition:background .18s ease;
   }
-  .select-menu button:hover{background:var(--amarelo-claro)}
+  .switch .knob{
+    width:22px;height:22px;border-radius:50%;background:#fff;
+    transition:transform .18s ease;box-shadow:0 1px 2px rgba(0,0,0,.2);
+  }
+  .switch.ligado{background:var(--amarelo)}
+  .switch.ligado .knob{transform:translateX(26px)}
+  #vistaManu.desativado .datas,
+  #vistaManu.desativado .radios,
+  #vistaManu.desativado #tituloManu,
+  #vistaManu.desativado .editor{opacity:.45;pointer-events:none}
 
   /* Vista: Modo de Manutenção */
   .datas{display:flex;flex-direction:column;gap:20px}
@@ -290,6 +302,38 @@
   .modal-sucesso h3{font-size:20px;font-weight:700;color:var(--preto);text-align:center;line-height:1.35}
   .modal-sucesso .btn-primario{margin-top:4px}
 
+  /* ===== Modal: Histórico de versões ===== */
+  .modal-historico{
+    width:640px;max-width:calc(100vw - 48px);background:#fff;border-radius:12px;padding:32px;
+    transform:translateY(8px) scale(.98);transition:transform .18s ease;
+    box-shadow:0 24px 60px rgba(0,0,0,.18);
+  }
+  .overlay.visivel .modal-historico{transform:none}
+  .mh-topo{display:flex;align-items:flex-start;justify-content:space-between}
+  .mh-topo h3{font-size:20px;font-weight:700;color:var(--texto)}
+  .mh-fechar{display:flex;padding:2px;border-radius:6px}
+  .mh-fechar:hover{background:var(--cinza-05)}
+  .mh-sub{font-size:12px;color:var(--cinza-02);margin-top:6px}
+  .mh-tabela{width:100%;border-collapse:collapse;margin-top:16px}
+  .mh-tabela th{
+    font-size:11px;font-weight:700;color:var(--cinza-02);text-align:left;
+    padding:0 12px 10px 0;border-bottom:1px solid var(--cinza-03);
+  }
+  .mh-tabela th:last-child,.mh-tabela td.acao{text-align:right;padding-right:0}
+  .mh-tabela td{
+    font-size:12px;color:var(--texto);padding:11px 12px 11px 0;
+    border-bottom:1px solid #EFEFEF;vertical-align:middle;
+  }
+  .mh-tabela tr:last-child td{border-bottom:none}
+  .mh-tabela td.v{white-space:nowrap}
+  .mh-tabela .ver{font-weight:700}
+  .badge-vigente{
+    display:inline-block;background:var(--amarelo);color:var(--preto);
+    font-size:10px;font-weight:700;padding:3px 8px;border-radius:100px;margin-left:6px;
+  }
+  .mh-tabela td.acao a{color:var(--amarelo);font-weight:700;text-decoration:none}
+  .mh-tabela td.acao a:hover{text-decoration:underline}
+
   [hidden]{display:none !important}
 </style>
 </head>
@@ -306,19 +350,23 @@
             <h1>Gerenciar Plataforma</h1>
           </div>
 
-          <div class="select-wrap" id="selWrap">
-            <div class="field select" id="sel" role="button" tabindex="0" aria-haspopup="listbox">
-              <span class="valor" id="selValor">Modo de Manutenção</span>
-              <svg class="chev" width="14" height="8" viewBox="0 0 14 8" fill="none"><path d="M1 1l6 6 6-6" stroke="#5D5E5E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-            <div class="select-menu" role="listbox">
-              <button data-op="manutencao">Modo de Manutenção</button>
-              <button data-op="termos">Termos e Condições</button>
-            </div>
+          <div class="tabs" id="tabs" role="tablist">
+            <button class="tab ativa" data-op="manutencao" role="tab">
+              <svg viewBox="0 0 20 20" width="16" height="16" fill="none"><circle cx="10" cy="10" r="2.4" stroke="currentColor" stroke-width="1.5"/><path d="M10 2.6v1.8M10 15.6v1.8M2.6 10h1.8M15.6 10h1.8M4.7 4.7l1.3 1.3M14 14l1.3 1.3M15.3 4.7L14 6M6 14l-1.3 1.3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              <span>Modo manutenção</span>
+            </button>
+            <button class="tab" data-op="termos" role="tab">
+              <svg viewBox="0 0 16 16" width="16" height="16" fill="none"><path d="M4 1.6h5L13 5.6v7.9A1.5 1.5 0 0 1 11.5 15h-7A1.5 1.5 0 0 1 3 13.5v-10A1.9 1.9 0 0 1 4 1.6Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M9 1.6v4h4M5.6 8.6h4.8M5.6 11h4.8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+              <span>Termos e condições</span>
+            </button>
           </div>
 
           <!-- ===== Vista Modo de Manutenção ===== -->
           <div id="vistaManu" style="display:flex;flex-direction:column;gap:32px">
+            <label class="toggle-manu" id="toggleManu">
+              <span class="switch ligado" id="swManu" role="switch" aria-checked="true"><span class="knob"></span></span>
+              <span>Ativar/Desativar manutenção</span>
+            </label>
             <div class="datas">
               <div class="data-row">
                 <div class="data-label">
@@ -373,7 +421,7 @@
               <span class="por" id="vPor">por Tauana Mendes&nbsp;&nbsp;·&nbsp;&nbsp;Justificativa: adequação à LGPD</span>
               <div class="links">
                 <a href="#" onclick="return false">Baixar documento (PDF)</a>
-                <a href="#" onclick="return false">Ver histórico de versões</a>
+                <a href="#" id="linkHistorico" onclick="return false">Ver histórico de versões</a>
               </div>
             </div>
 
@@ -543,33 +591,78 @@
   </div>
 </div>
 
+<!-- ===== Modal: Histórico de versões ===== -->
+<div class="overlay" id="overlayHist">
+  <div class="modal-historico" role="dialog" aria-modal="true" aria-label="Histórico de versões">
+    <div class="mh-topo">
+      <h3>Histórico de versões</h3>
+      <button class="mh-fechar" id="fecharHist" aria-label="Fechar">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 5l10 10M15 5L5 15" stroke="#3A3B3D" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <p class="mh-sub">Termos e Condições — YetzFlash</p>
+    <table class="mh-tabela">
+      <thead>
+        <tr><th>Versão</th><th>Publicação</th><th>Responsável</th><th>Justificativa</th><th></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="v"><span class="ver">v2.3</span> <span class="badge-vigente">Vigente</span></td>
+          <td>15/05/2026</td><td>Tauana Mendes</td><td>Adequação à LGPD</td>
+          <td class="acao"><a href="#" onclick="return false">Baixar</a></td>
+        </tr>
+        <tr>
+          <td class="v"><span class="ver">v2.2</span></td>
+          <td>03/11/2025</td><td>Ricardo Nunes</td><td>Revisão das regras de resgate</td>
+          <td class="acao"><a href="#" onclick="return false">Baixar</a></td>
+        </tr>
+        <tr>
+          <td class="v"><span class="ver">v2.1</span></td>
+          <td>18/06/2025</td><td>Tauana Mendes</td><td>Política de dados de parceiros</td>
+          <td class="acao"><a href="#" onclick="return false">Baixar</a></td>
+        </tr>
+        <tr>
+          <td class="v"><span class="ver">v2.0</span></td>
+          <td>02/02/2025</td><td>Bruna Costa</td><td>Reestruturação geral dos termos</td>
+          <td class="acao"><a href="#" onclick="return false">Baixar</a></td>
+        </tr>
+        <tr>
+          <td class="v"><span class="ver">v1.0</span></td>
+          <td>10/08/2024</td><td>Ricardo Nunes</td><td>Publicação inicial</td>
+          <td class="acao"><a href="#" onclick="return false">Baixar</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
 <script>
 (function(){
   var $ = function(s, c){ return (c||document).querySelector(s); };
   var $$ = function(s, c){ return Array.prototype.slice.call((c||document).querySelectorAll(s)); };
 
-  /* ---------- Select de tipo de configuração ---------- */
-  var selWrap = $('#selWrap'), sel = $('#sel'), selValor = $('#selValor');
+  /* ---------- Abas de tipo de configuração ---------- */
   var vistaManu = $('#vistaManu'), vistaTermos = $('#vistaTermos');
   var pvManu = $('#pvManu'), pvTermos = $('#pvTermos');
 
-  sel.addEventListener('click', function(){
-    selWrap.classList.toggle('aberto');
-    sel.classList.toggle('aberto');
-  });
-  document.addEventListener('click', function(e){
-    if(!selWrap.contains(e.target)){ selWrap.classList.remove('aberto'); sel.classList.remove('aberto'); }
-  });
-  $$('.select-menu button').forEach(function(b){
+  $$('#tabs .tab').forEach(function(b){
     b.addEventListener('click', function(){
-      selValor.textContent = b.textContent;
       var termos = b.dataset.op === 'termos';
+      $$('#tabs .tab').forEach(function(t){ t.classList.toggle('ativa', t === b); });
       vistaManu.hidden = termos;  vistaManu.style.display = termos ? 'none' : 'flex';
       vistaTermos.hidden = !termos; vistaTermos.style.display = termos ? 'flex' : 'none';
       pvManu.hidden = termos;
       pvTermos.hidden = !termos;
-      selWrap.classList.remove('aberto'); sel.classList.remove('aberto');
     });
+  });
+
+  /* ---------- Toggle Ativar/Desativar manutenção ---------- */
+  var swManu = $('#swManu');
+  $('#toggleManu').addEventListener('click', function(){
+    var ligado = swManu.classList.toggle('ligado');
+    swManu.setAttribute('aria-checked', ligado ? 'true' : 'false');
+    // desabilita/reativa os campos de configuração conforme o estado
+    vistaManu.classList.toggle('desativado', !ligado);
   });
 
   /* ---------- Modo de Manutenção ---------- */
@@ -704,6 +797,19 @@
 
   $('#btnSalvar').addEventListener('click', function(){ abrirModal('manutencao'); });
   btnPublicar.addEventListener('click', function(){ abrirModal('termos'); });
+
+  /* ---------- Modal: Histórico de versões ---------- */
+  var overlayHist = $('#overlayHist');
+  function fecharHistorico(){ overlayHist.classList.remove('visivel'); }
+  $('#linkHistorico').addEventListener('click', function(e){
+    e.preventDefault();
+    overlayHist.classList.add('visivel');
+  });
+  $('#fecharHist').addEventListener('click', fecharHistorico);
+  overlayHist.addEventListener('click', function(e){ if(e.target === overlayHist) fecharHistorico(); });
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && overlayHist.classList.contains('visivel')) fecharHistorico();
+  });
 })();
 </script>
 </body>
