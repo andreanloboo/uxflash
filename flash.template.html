@@ -302,6 +302,21 @@
   .modal-sucesso h3{font-size:20px;font-weight:700;color:var(--preto);text-align:center;line-height:1.35}
   .modal-sucesso .btn-primario{margin-top:4px}
 
+  /* ===== Modal: Alerta antes de publicar (Figma 11148:7457) ===== */
+  .modal-alerta{
+    width:392px;background:#fff;border-radius:16px;padding:32px 32px 24px;
+    display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;
+    transform:translateY(8px) scale(.98);transition:transform .18s ease;
+    box-shadow:0 24px 60px rgba(0,0,0,.18);
+  }
+  .overlay.visivel .modal-alerta{transform:none}
+  .modal-alerta h3{font-size:20px;font-weight:700;color:var(--amarelo)}
+  .modal-alerta .aviso{font-size:16px;font-weight:700;color:var(--cinza-01)}
+  .modal-alerta p{font-size:16px;color:var(--preto);line-height:1.35}
+  .modal-alerta .acoes{width:100%;display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:4px}
+  .btn-texto{background:none;border:0;font-size:16px;color:var(--preto);cursor:pointer;padding:6px 12px}
+  .btn-texto:hover{text-decoration:underline}
+
   /* ===== Modal: Histórico de versões ===== */
   .modal-historico{
     width:640px;max-width:calc(100vw - 48px);background:#fff;border-radius:12px;padding:32px;
@@ -586,8 +601,22 @@
 <div class="overlay" id="overlay">
   <div class="modal-sucesso" role="dialog" aria-modal="true">
     <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M42 24a18 18 0 1 1-9.6-15.9" stroke="#4CAF50" stroke-width="4" stroke-linecap="round"/><path d="M16.5 23.5 23 30l14.5-16" stroke="#4CAF50" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    <h3>Configurações<br>salvas com sucesso</h3>
+    <h3 id="msgSucesso">Configurações<br>salvas com sucesso</h3>
     <button class="btn-primario" id="btnOk">Ok</button>
+  </div>
+</div>
+
+<!-- ===== Modal: Alerta antes de publicar (Figma 11148:7457) ===== -->
+<div class="overlay" id="overlayConf">
+  <div class="modal-alerta" role="alertdialog" aria-modal="true" aria-labelledby="confTitulo">
+    <svg width="56" height="56" viewBox="0 0 56 56" fill="none"><circle cx="28" cy="28" r="25" stroke="#FCB614" stroke-width="4"/><path d="M28 15v17" stroke="#FCB614" stroke-width="4.5" stroke-linecap="round"/><circle cx="28" cy="40.5" r="2.8" fill="#FCB614"/></svg>
+    <h3 id="confTitulo">Atenção</h3>
+    <span class="aviso">Essa ação é irreversível</span>
+    <p>Você realmente deseja confirmar a publicação uma nova versão (<span id="confVersao">v2.4</span>) dos Termos e Condições?</p>
+    <div class="acoes">
+      <button class="btn-primario" id="btnConfirmarPub">Confirmar</button>
+      <button class="btn-texto" id="btnCancelarPub">Cancelar</button>
+    </div>
   </div>
 </div>
 
@@ -805,7 +834,12 @@
   /* ---------- Modal de sucesso ---------- */
   var overlay = $('#overlay'), btnOk = $('#btnOk');
   var origem = null;
-  function abrirModal(qual){ origem = qual; overlay.classList.add('visivel'); }
+  function abrirModal(qual){
+    origem = qual;
+    // Figma: publicar mostra "Versão publicada com sucesso" (10912:4579); salvar a manutenção, "Configurações salvas".
+    $('#msgSucesso').innerHTML = qual === 'termos' ? 'Versão publicada<br>com sucesso' : 'Configurações<br>salvas com sucesso';
+    overlay.classList.add('visivel');
+  }
   btnOk.addEventListener('click', function(){
     overlay.classList.remove('visivel');
     if(origem === 'termos'){
@@ -831,7 +865,17 @@
   overlay.addEventListener('click', function(e){ if(e.target === overlay) btnOk.click(); });
 
   $('#btnSalvar').addEventListener('click', function(){ abrirModal('manutencao'); });
-  btnPublicar.addEventListener('click', function(){ abrirModal('termos'); });
+  /* ---------- Alerta antes de publicar ---------- */
+  var overlayConf = $('#overlayConf');
+  function fecharConfirmacao(){ overlayConf.classList.remove('visivel'); }
+  btnPublicar.addEventListener('click', function(){
+    $('#confVersao').textContent = 'v' + versao.maior + '.' + (versao.menor + 1);
+    overlayConf.classList.add('visivel');
+    $('#btnConfirmarPub').focus();
+  });
+  $('#btnConfirmarPub').addEventListener('click', function(){ fecharConfirmacao(); abrirModal('termos'); });
+  $('#btnCancelarPub').addEventListener('click', fecharConfirmacao);
+  overlayConf.addEventListener('click', function(e){ if(e.target === overlayConf) fecharConfirmacao(); });
 
   /* ---------- Modal: Histórico de versões ---------- */
   var overlayHist = $('#overlayHist');
@@ -844,6 +888,7 @@
   overlayHist.addEventListener('click', function(e){ if(e.target === overlayHist) fecharHistorico(); });
   document.addEventListener('keydown', function(e){
     if(e.key === 'Escape' && overlayHist.classList.contains('visivel')) fecharHistorico();
+    if(e.key === 'Escape' && overlayConf.classList.contains('visivel')) fecharConfirmacao();
   });
 })();
 </script>
