@@ -509,7 +509,7 @@
                 <div class="modal-tc">
                   <svg class="doc" width="25" height="25" viewBox="0 0 25 25" fill="none"><path d="M6 2.5h8.5L20 8v13a1.5 1.5 0 0 1-1.5 1.5h-12A1.5 1.5 0 0 1 5 21V4a1.5 1.5 0 0 1 1-1.42.9.9 0 0 1 0-.08Z" stroke="#FCB614" stroke-width="1.8" stroke-linejoin="round"/><path d="M14.5 2.5V8H20" stroke="#FCB614" stroke-width="1.8" stroke-linejoin="round"/></svg>
                   <h3>Termos e Condições atualizados</h3>
-                  <p class="sub">Revisamos nossos Termos e Condições. Para continuar usando o YetzFlash,<br>leia e aceite a nova versão (v2.4).</p>
+                  <p class="sub">Revisamos nossos Termos e Condições. Para continuar usando o YetzFlash,<br>leia e aceite a nova versão (<span data-prox-versao>v2.4</span>).</p>
                   <div class="caixa-termos">
                     <div class="rolagem">
                       <h4>1. Aceitação dos Termos</h4>
@@ -546,7 +546,7 @@
                   <span class="alca"></span>
                   <svg class="doc" width="20" height="20" viewBox="0 0 25 25" fill="none"><path d="M6 2.5h8.5L20 8v13a1.5 1.5 0 0 1-1.5 1.5h-12A1.5 1.5 0 0 1 5 21V4a1.5 1.5 0 0 1 1-1.42.9.9 0 0 1 0-.08Z" stroke="#FCB614" stroke-width="1.8" stroke-linejoin="round"/><path d="M14.5 2.5V8H20" stroke="#FCB614" stroke-width="1.8" stroke-linejoin="round"/></svg>
                   <h3>Termos e Condições atualizados</h3>
-                  <p class="sub">Revisamos nossos Termos e Condições. Para<br>continuar usando o YetzFlash,<br>leia e aceite a nova versão (v2.4).</p>
+                  <p class="sub">Revisamos nossos Termos e Condições. Para<br>continuar usando o YetzFlash,<br>leia e aceite a nova versão (<span data-prox-versao>v2.4</span>).</p>
                   <div class="caixa-termos">
                     <div class="rolagem">
                       <h4>1. Aceitação dos Termos</h4>
@@ -605,7 +605,7 @@
       <thead>
         <tr><th>Versão</th><th>Publicação</th><th>Responsável</th><th>Justificativa</th><th></th></tr>
       </thead>
-      <tbody>
+      <tbody id="histCorpo">
         <tr>
           <td class="v"><span class="ver">v2.3</span> <span class="badge-vigente">Vigente</span></td>
           <td>15/05/2026</td><td>Tauana Mendes</td><td>Adequação à LGPD</td>
@@ -773,6 +773,35 @@
     el.addEventListener('click', function(){ el.classList.toggle('ok'); });
   });
 
+  /* ---------- Versão vigente e histórico ---------- */
+  // Começa na v2.3 (vigente no layout); cada publicação gera a próxima versão
+  // menor e entra no topo do histórico como "Vigente".
+  var versao = { maior: 2, menor: 3 };
+  function registrarNoHistorico(num, data, resp, just){
+    var corpo = $('#histCorpo');
+    var antiga = corpo.querySelector('.badge-vigente');
+    if(antiga){
+      var antes = antiga.previousSibling;
+      if(antes && antes.nodeType === 3){ antes.textContent = ''; }
+      antiga.style.display = 'none';
+      antiga.className = '';
+    }
+    var tr = document.createElement('tr');
+    var tdV = document.createElement('td'); tdV.className = 'v';
+    var sv = document.createElement('span'); sv.className = 'ver'; sv.textContent = num;
+    var sb = document.createElement('span'); sb.className = 'badge-vigente'; sb.textContent = 'Vigente';
+    tdV.appendChild(sv); tdV.appendChild(document.createTextNode(' ')); tdV.appendChild(sb);
+    tr.appendChild(tdV);
+    [data, resp, just].forEach(function(t){
+      var td = document.createElement('td'); td.textContent = t; tr.appendChild(td);
+    });
+    var tdA = document.createElement('td'); tdA.className = 'acao';
+    var a = document.createElement('a'); a.href = '#'; a.textContent = 'Baixar';
+    a.addEventListener('click', function(e){ e.preventDefault(); });
+    tdA.appendChild(a); tr.appendChild(tdA);
+    corpo.insertBefore(tr, corpo.firstElementChild);
+  }
+
   /* ---------- Modal de sucesso ---------- */
   var overlay = $('#overlay'), btnOk = $('#btnOk');
   var origem = null;
@@ -783,9 +812,15 @@
       var hoje = new Date();
       var dd = String(hoje.getDate()).padStart(2,'0');
       var mm = String(hoje.getMonth()+1).padStart(2,'0');
-      $('#vNum').textContent = 'v2.4 — publicada em ' + dd + '/' + mm + '/' + hoje.getFullYear();
+      var data = dd + '/' + mm + '/' + hoje.getFullYear();
+      versao.menor += 1;
+      var nova = 'v' + versao.maior + '.' + versao.menor;
+      $('#vNum').textContent = nova + ' — publicada em ' + data;
       var j = taJust.value.trim();
-      $('#vPor').innerHTML = 'por Tauana Mendes&nbsp;&nbsp;·&nbsp;&nbsp;Justificativa: ' + (j.length > 60 ? j.slice(0,60) + '…' : j);
+      $('#vPor').textContent = 'por Tauana Mendes\u00a0\u00a0·\u00a0\u00a0Justificativa: ' + (j.length > 60 ? j.slice(0,60) + '…' : j);
+      registrarNoHistorico(nova, data, 'Tauana Mendes', j);
+      var prox = 'v' + versao.maior + '.' + (versao.menor + 1);
+      $$('[data-prox-versao]').forEach(function(el){ el.textContent = prox; });
       setArquivo(null);
       taJust.value = '';
       contador.textContent = '0/30';
