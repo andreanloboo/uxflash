@@ -253,6 +253,8 @@
   .btn-aceitar{
     height:30px;border-radius:126px;background:var(--amarelo);font-size:10px;font-weight:700;color:var(--preto);
   }
+  .btn-aceitar:disabled{background:var(--desabilitado);color:var(--cinza-02);cursor:default}
+  .aceite:focus-visible{outline:2px solid var(--amarelo);outline-offset:2px;border-radius:4px}
   .btn-sair{height:26px;font-size:10px;font-weight:700;color:var(--preto)}
 
   /* Termos — mobile (bottom sheet) */
@@ -542,12 +544,12 @@
                       <p>Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae sint et molestiae non recusandae. Itaque earum rerum hic tenetur a sapiente delectus.</p>
                     </div>
                   </div>
-                  <div class="aceite" data-aceite>
+                  <div class="aceite" data-aceite role="checkbox" aria-checked="false" tabindex="0">
                     <span class="cx"><svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M1.5 5.2 4 7.5l4.5-5" stroke="#000" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                     <span>Li e concordo com os Termos e Condições atualizados.</span>
                   </div>
                   <div class="botoes">
-                    <button class="btn-aceitar">Aceitar e continuar</button>
+                    <button class="btn-aceitar" disabled>Aceitar e continuar</button>
                     <button class="btn-sair">Sair</button>
                   </div>
                 </div>
@@ -572,12 +574,12 @@
                       <p>Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur.</p>
                     </div>
                   </div>
-                  <div class="aceite" data-aceite>
+                  <div class="aceite" data-aceite role="checkbox" aria-checked="false" tabindex="0">
                     <span class="cx"><svg width="7" height="7" viewBox="0 0 10 10" fill="none"><path d="M1.5 5.2 4 7.5l4.5-5" stroke="#000" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                     <span>Li e concordo com os Termos e Condições<br>atualizados.</span>
                   </div>
                   <div class="botoes">
-                    <button class="btn-aceitar">Aceitar e continuar</button>
+                    <button class="btn-aceitar" disabled>Aceitar e continuar</button>
                     <button class="btn-sair">Sair</button>
                   </div>
                 </div>
@@ -798,8 +800,19 @@
   }
 
   /* ---------- Aceite (checkbox do preview) ---------- */
+  // "Aceitar e continuar" só habilita com "Li e concordo" marcado (cada preview tem o seu).
+  function botaoDoAceite(el){ return el.parentNode.querySelector('.btn-aceitar'); }
+  function marcarAceite(el, ok){
+    el.classList.toggle('ok', ok);
+    el.setAttribute('aria-checked', ok ? 'true' : 'false');
+    var b = botaoDoAceite(el); if(b) b.disabled = !ok;
+  }
+  function zerarAceites(){ $$('[data-aceite]').forEach(function(el){ marcarAceite(el, false); }); }
   $$('[data-aceite]').forEach(function(el){
-    el.addEventListener('click', function(){ el.classList.toggle('ok'); });
+    el.addEventListener('click', function(){ marcarAceite(el, !el.classList.contains('ok')); });
+    el.addEventListener('keydown', function(e){
+      if(e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); marcarAceite(el, !el.classList.contains('ok')); }
+    });
   });
 
   /* ---------- Versão vigente e histórico ---------- */
@@ -855,6 +868,7 @@
       registrarNoHistorico(nova, data, 'Tauana Mendes', j);
       var prox = 'v' + versao.maior + '.' + (versao.menor + 1);
       $$('[data-prox-versao]').forEach(function(el){ el.textContent = prox; });
+      zerarAceites(); // nova versão publicada: todos precisam aceitar de novo
       setArquivo(null);
       taJust.value = '';
       contador.textContent = '0/30';
