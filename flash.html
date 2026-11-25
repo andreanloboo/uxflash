@@ -344,6 +344,29 @@
   .mh-tabela tr:last-child td{border-bottom:none}
   .mh-tabela td.v{white-space:nowrap}
   .mh-tabela .ver{font-weight:700}
+  .mh-tabela tbody tr{cursor:pointer}
+  .mh-tabela tbody tr:hover td,.mh-tabela tbody tr:focus-visible td{background:#FFF8E6}
+  .mh-tabela tbody tr:focus-visible{outline:none}
+
+  /* ===== Modal: Visualizar versão (Figma 11158:93) ===== */
+  .modal-versao{
+    width:640px;max-width:calc(100vw - 48px);background:#fff;border-radius:12px;padding:32px;
+    display:flex;flex-direction:column;gap:24px;
+    transform:translateY(8px) scale(.98);transition:transform .18s ease;
+    box-shadow:0 24px 60px rgba(0,0,0,.18);
+  }
+  .overlay.visivel .modal-versao{transform:none}
+  .mv-topo{display:flex;align-items:center;justify-content:space-between}
+  .mv-titulo{display:flex;align-items:center;gap:12px}
+  .mv-voltar{display:flex;padding:4px;border-radius:6px;background:none;border:0;cursor:pointer}
+  .mv-voltar:hover{background:var(--cinza-05)}
+  .mv-titulo h3{font-size:20px;font-weight:700;color:var(--texto)}
+  .mv-badge{background:var(--amarelo);color:#fff;font-size:12px;font-weight:700;padding:3px 8px;border-radius:4px}
+  .mv-info{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .mv-info .rot{display:block;font-size:11px;font-weight:700;color:var(--cinza-02)}
+  .mv-info .val{display:block;font-size:14px;color:var(--texto);margin-top:8px}
+  .mv-just h4{font-size:14px;font-weight:700;color:var(--texto);margin-bottom:8px}
+  .mv-just .caixa{min-height:120px;border:1px solid var(--cinza-01);border-radius:8px;padding:12px 16px;font-size:12px;line-height:1.45;color:var(--texto);white-space:pre-wrap;overflow-wrap:anywhere}
   .badge-vigente{
     display:inline-block;background:var(--amarelo);color:var(--preto);
     font-size:10px;font-weight:700;padding:3px 8px;border-radius:100px;margin-left:6px;
@@ -622,6 +645,33 @@
   </div>
 </div>
 
+<!-- ===== Modal: Visualizar versão (Figma 11158:93) ===== -->
+<div class="overlay" id="overlayVer">
+  <div class="modal-versao" role="dialog" aria-modal="true" aria-labelledby="mvTitulo">
+    <div class="mv-topo">
+      <div class="mv-titulo">
+        <button class="mv-voltar" id="mvVoltar" aria-label="Voltar ao histórico">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 4.5 7 10l5.5 5.5" stroke="#3A3B3D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <h3 id="mvTitulo">Versão v2.3</h3>
+        <span class="mv-badge" id="mvBadge">Vigente</span>
+      </div>
+      <button class="mh-fechar" id="mvFechar" aria-label="Fechar">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 5l10 10M15 5L5 15" stroke="#3A3B3D" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="mv-info">
+      <div><span class="rot">Publicação</span><span class="val" id="mvData"></span></div>
+      <div><span class="rot">Responsável</span><span class="val" id="mvResp"></span></div>
+    </div>
+    <div class="mv-just">
+      <h4>Justificativa</h4>
+      <div class="caixa" id="mvJust"></div>
+    </div>
+    <button class="btn-primario" id="mvBaixar">Baixar esta versão</button>
+  </div>
+</div>
+
 <!-- ===== Modal: Histórico de versões ===== -->
 <div class="overlay" id="overlayHist">
   <div class="modal-historico" role="dialog" aria-modal="true" aria-label="Histórico de versões">
@@ -819,6 +869,7 @@
   // Começa na v2.3 (vigente no layout); cada publicação gera a próxima versão
   // menor e entra no topo do histórico como "Vigente".
   var versao = { maior: 2, menor: 3 };
+  var arquivosPublicados = new WeakMap(); // linha do histórico -> File publicado nesta sessão
   function registrarNoHistorico(num, data, resp, just){
     var corpo = $('#histCorpo');
     var antiga = corpo.querySelector('.badge-vigente');
@@ -841,6 +892,8 @@
     var a = document.createElement('a'); a.href = '#'; a.textContent = 'Baixar';
     a.addEventListener('click', function(e){ e.preventDefault(); });
     tdA.appendChild(a); tr.appendChild(tdA);
+    var anexo = upInput.files && upInput.files[0];
+    if(anexo) arquivosPublicados.set(tr, anexo);
     corpo.insertBefore(tr, corpo.firstElementChild);
   }
 
@@ -899,9 +952,49 @@
     overlayHist.classList.add('visivel');
   });
   $('#fecharHist').addEventListener('click', fecharHistorico);
+
+  /* ---------- Modal: Visualizar versão ---------- */
+  var overlayVer = $('#overlayVer'), linhaAberta = null;
+  function abrirVersao(tr){
+    var td = tr.children;
+    linhaAberta = tr;
+    $('#mvTitulo').textContent = 'Versão ' + td[0].querySelector('.ver').textContent;
+    $('#mvBadge').style.display = tr.querySelector('.badge-vigente') ? '' : 'none';
+    $('#mvData').textContent = td[1].textContent;
+    $('#mvResp').textContent = td[2].textContent;
+    $('#mvJust').textContent = td[3].textContent;
+    fecharHistorico();
+    overlayVer.classList.add('visivel');
+    $('#mvVoltar').focus();
+  }
+  function fecharVersao(){ overlayVer.classList.remove('visivel'); linhaAberta = null; }
+  function baixarDaLinha(tr){
+    var f = tr && arquivosPublicados.get(tr);
+    if(!f) return; // versões de exemplo do layout não têm arquivo
+    var url = URL.createObjectURL(f), a = document.createElement('a');
+    a.href = url; a.download = f.name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  }
+  $('#histCorpo').addEventListener('click', function(e){
+    var tr = e.target.closest('tr'); if(!tr) return;
+    if(e.target.closest('td.acao')){ e.preventDefault(); baixarDaLinha(tr); return; }
+    abrirVersao(tr);
+  });
+  $('#histCorpo').addEventListener('keydown', function(e){
+    var tr = e.target.closest('tr');
+    if(tr && e.target === tr && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); abrirVersao(tr); }
+  });
+  function tornarLinhasFocaveis(){ $$('#histCorpo tr').forEach(function(tr){ tr.tabIndex = 0; }); }
+  tornarLinhasFocaveis();
+  $('#linkHistorico').addEventListener('click', tornarLinhasFocaveis);
+  $('#mvVoltar').addEventListener('click', function(){ fecharVersao(); overlayHist.classList.add('visivel'); });
+  $('#mvFechar').addEventListener('click', fecharVersao);
+  $('#mvBaixar').addEventListener('click', function(){ baixarDaLinha(linhaAberta); });
+  overlayVer.addEventListener('click', function(e){ if(e.target === overlayVer) fecharVersao(); });
   overlayHist.addEventListener('click', function(e){ if(e.target === overlayHist) fecharHistorico(); });
   document.addEventListener('keydown', function(e){
     if(e.key === 'Escape' && overlayHist.classList.contains('visivel')) fecharHistorico();
+    if(e.key === 'Escape' && overlayVer.classList.contains('visivel')) fecharVersao();
     if(e.key === 'Escape' && overlayConf.classList.contains('visivel')) fecharConfirmacao();
   });
 })();
